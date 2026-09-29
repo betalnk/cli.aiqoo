@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Документация CLI: Windows-прототип для Codex CLI, управление, локальное распознавание и планы доступа с телефона.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://cli.aiqoo.ru/docs.html">
+  <link rel="stylesheet" href="/styles.css">
+  <title>Документация — CLI</title>
+</head>
+<body>
+  <a class="skip-link" href="#main">К содержимому</a>
+  <header class="site-header"><div class="site-header__inner"><a class="brand" href="/" aria-label="CLI, главная"><span class="brand__mark" aria-hidden="true">&gt;_</span><span>cli<span class="brand__slash">/</span></span></a><nav class="site-nav" aria-label="Основная навигация"><a class="is-current" href="/docs.html" aria-current="page">Документация</a><a href="https://github.com/betalnk/cli.aiqoo" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a><a class="site-nav__login" href="/login.html">Аккаунт <span aria-hidden="true">↗</span></a></nav></div></header>
+  <main class="docs-layout page-width" id="main">
+    <aside class="docs-nav" aria-label="Разделы документации"><strong>На этой странице</strong><a href="#start">Быстрый старт</a><a href="#usage">Управление</a><a href="#delivery">Отправка</a><a href="#privacy">Данные и доступ</a><a href="#support">Поддержка</a></aside>
+    <article class="docs-content">
+      <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span> Документация Windows-прототипа</p>
+      <h1>CLI</h1>
+      <p class="docs-lead">Коннектор позволяет надиктовать и исправить сообщение, затем попробовать отправить его в открытую сессию Codex CLI. Распознавание выполняется на вашем ПК. Телефонный интерфейс и аккаунт находятся в разработке.</p>
+
+      <section id="start"><h2>Быстрый старт</h2><p>Текущий прототип рассчитан на Windows и Codex CLI в CMD или PowerShell. Нужны .NET 8, микрофон и локальные модели Vosk и Whisper. Локальная отправка в уже открытую вкладку работает без обязательного плагина, общего сервера Codex и перезапуска вкладки.</p><p>Исходники и команды сборки находятся в <a href="https://github.com/betalnk/cli.aiqoo/tree/main/connector/windows">пакете Windows-коннектора</a>. Публичного установщика пока нет.</p></section>
+      <section id="usage"><h2>Управление</h2><ol><li>Откройте нужную сессию Codex CLI в CMD или PowerShell и выведите её вкладку на передний план.</li><li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Пробел</kbd> открывает основной ввод; удержание <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>V</kbd> запускает быстрый голосовой ввод, отпускание завершает запись.</li><li>Произнесите сообщение. В основном окне можно проверить и поправить распознанный текст, а также выбрать другую обнаруженную сессию.</li><li><kbd>Enter</kbd> завершает запись и пытается отправить сообщение в выбранную сессию; кнопка «Отправить» оставляет окно открытым. <kbd>Esc</kbd> закрывает ввод без отправки.</li></ol><p>Перед отправкой приложение повторно проверяет выбранное окно, вкладку и сессию. Если адресат не подтверждён, текст сохраняется для правки. Финальное распознавание длинной записи может занять время.</p></section>
+      <section id="delivery"><h2>Куда попадает сообщение</h2><p>Коннектор сопоставляет видимое окно терминала с открытой сессией Codex и перед вводом повторно проверяет адресата. Он вводит текст и один Enter в выбранную вкладку; получение сообщения дополнительно проверяется по истории именно этой сессии. К сообщению добавляется метка <code>[via Voice Connector]</code>. Постановка клавиш в очередь Windows сама по себе не считается подтверждением Codex.</p><p>Если вкладка недоступна или её нельзя однозначно подтвердить, коннектор не пытается отправить текст в другую сессию. Локальное распознавание речи не означает локальную обработку запроса моделью Codex.</p><p>Автопрослушивание ответов выбранной сессии и переход между ответами ещё не проверены в полном пользовательском цикле. Синтез речи выполняется локально на ПК.</p></section>
+      <section id="privacy"><h2>Данные и доступ</h2><p>Сейчас звук обрабатывается локальными моделями на ПК, а коннектор работает с открытой сессией Codex. Для доступа с телефона из любой сети разрабатываются отдельный аккаунт CLI, привязка устройств и зашифрованный канал для истории и сообщений. Сервер не запускает распознавание и команды Codex.</p><p>В тестовой сборке кабинета телефон записывает голос локально, передаёт его зашифрованным на подключённый ПК и показывает распознанный текст для правки. Отправка требует отдельного нажатия и разблокированного ПК с видимой выбранной сессией. При неясном результате автоматического повтора нет. Сервис пока не развёрнут.</p><p>Аккаунт CLI независим от аккаунта основной платформы AIQOO. Инструкция по подключению и отзыву доступа появится вместе с работающим сервисом.</p></section>
+      <section id="support"><h2>Поддержка и ограничения</h2><ul><li>Windows + Codex CLI — единственный прототип на данный момент. Claude Code, macOS и Linux пока не проверены.</li><li>Короткие слова могут распознаваться неверно; проверяйте текст перед отправкой.</li><li>Телефонный доступ, публичный установщик и автоматическое обновление ещё не готовы.</li></ul></section>
+      <div class="docs-end"><span>Не нашли ответ?</span><p>Исходный <a href="https://github.com/betalnk/cli.aiqoo">репозиторий проекта</a> открыт на GitHub; условия использования указаны в <a href="https://github.com/betalnk/cli.aiqoo/blob/main/LICENSE">лицензии</a>. Публичная сборка коннектора ещё готовится.</p></div>
+    </article>
+  </main>
+  <footer class="site-footer page-width"><span>CLI · отдельный проект</span><a href="/">Главная</a><span>cli.aiqoo.ru</span></footer>
+</body>
+</html>

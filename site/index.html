@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="CLI — интерфейс для локальных сессий кодовых агентов. Голосовой ввод для Codex CLI на Windows; доступ с телефона в разработке.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://cli.aiqoo.ru/">
+  <link rel="stylesheet" href="/styles.css">
+  <title>CLI — работа с локальными сессиями Codex</title>
+</head>
+<body>
+  <a class="skip-link" href="#main">К содержимому</a>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="brand" href="/" aria-label="CLI, главная"><span class="brand__mark" aria-hidden="true">&gt;_</span><span>cli<span class="brand__slash">/</span></span></a>
+      <nav class="site-nav" aria-label="Основная навигация">
+        <a href="/docs.html">Документация</a>
+        <a href="https://github.com/betalnk/cli.aiqoo" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+        <a class="site-nav__login" href="/login.html">Аккаунт <span aria-hidden="true">↗</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="intro page-width" aria-labelledby="intro-title">
+      <div class="intro__copy">
+        <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span> Windows-прототип · Codex CLI</p>
+        <h1 id="intro-title">Сессия остаётся в терминале. Ввод становится удобнее.</h1>
+        <p class="intro__lead">CLI помогает работать с локальными сессиями кодовых агентов. Сейчас коннектор для Windows превращает речь в редактируемый текст для Codex CLI. Доступ к истории и отправка с телефона — следующий этап.</p>
+        <div class="intro__actions">
+          <a class="button button--solid" href="#how">Как это работает <span aria-hidden="true">→</span></a>
+          <a class="text-link" href="/docs.html">Документация <span aria-hidden="true">↗</span></a>
+        </div>
+        <p class="intro__note">Публичный установщик и вход в аккаунт пока не открыты.</p>
+      </div>
+
+      <figure class="system-map" aria-labelledby="map-title">
+        <figcaption class="system-map__head"><span id="map-title">Принцип работы</span><span>Схема, не экран приложения</span></figcaption>
+        <div class="system-map__node system-map__node--primary">
+          <span class="system-map__index">01 / WINDOWS-ПРОТОТИП</span>
+          <strong>Речь → текст → правка</strong>
+          <small>Коннектор обрабатывает звук локально</small>
+        </div>
+        <div class="system-map__join" aria-hidden="true"><span></span><em>↓ сообщение</em></div>
+        <div class="system-map__node">
+          <span class="system-map__index">02 / ЛОКАЛЬНО</span>
+          <strong>Открытая сессия Codex CLI</strong>
+          <small>Терминал на вашем ПК</small>
+        </div>
+        <div class="system-map__future"><span class="system-map__future-line" aria-hidden="true"></span><div><span class="system-map__index">СЛЕДУЮЩИЙ ЭТАП</span><strong>Телефон и история сессии</strong><small>Доступ через отдельный аккаунт и защищённое соединение</small></div><span class="pill">в работе</span></div>
+      </figure>
+    </section>
+
+    <section class="section page-width" id="capabilities" aria-labelledby="capabilities-title">
+      <div class="section__heading"><div><p class="section-kicker">Возможности</p><h2 id="capabilities-title">Что доступно</h2></div><p>Состояние каждой части показано отдельно, чтобы было понятно, с чего можно начать.</p></div>
+      <div class="capability-list">
+        <div class="capability-list__row"><div><span class="capability-list__number">01</span><h3>Windows + Codex CLI</h3></div><p>Горячая клавиша, обнаружение открытой вкладки, локальное распознавание и правка текста перед отправкой.</p><span class="state state--current">Прототип</span></div>
+        <div class="capability-list__row"><div><span class="capability-list__number">02</span><h3>Ответы голосом</h3></div><p>Автопрослушивание новых ответов выбранной сессии и переход к предыдущему или следующему ответу.</p><span class="state">В работе</span></div>
+        <div class="capability-list__row"><div><span class="capability-list__number">03</span><h3>Доступ с телефона</h3></div><p>Выбор сессии, история и отправка текста или голоса через соединение с вашим ПК.</p><span class="state">В работе</span></div>
+        <div class="capability-list__row"><div><span class="capability-list__number">04</span><h3>Другие системы и агенты</h3></div><p>Поддержка Claude Code, macOS и Linux потребует отдельных адаптеров и проверки на реальных устройствах.</p><span class="state">План</span></div>
+      </div>
+    </section>
+
+    <section class="section page-width" id="how" aria-labelledby="how-title">
+      <div class="section__heading"><div><p class="section-kicker">Windows-прототип</p><h2 id="how-title">Три действия до отправки</h2></div><p>Текст остаётся под вашим контролем до подтверждения.</p></div>
+      <div class="steps">
+        <div class="steps__item"><span>01</span><h3>Откройте вкладку</h3><p>Выведите нужную сессию Codex CLI на передний план и вызовите коннектор горячей клавишей.</p></div>
+        <div class="steps__item"><span>02</span><h3>Скажите и поправьте</h3><p>Речь распознаётся на компьютере. Полученный текст можно изменить прямо в поле ввода.</p></div>
+        <div class="steps__item"><span>03</span><h3>Подтвердите</h3><p><kbd>Enter</kbd> завершает запись и отправляет сообщение в выбранную сессию, когда адресат подтверждён. Если вкладка изменилась или недоступна, текст остаётся для правки. <kbd>Esc</kbd> закрывает ввод.</p></div>
+      </div>
+      <a class="section-link" href="/docs.html#usage">Порядок работы и ограничения <span aria-hidden="true">↗</span></a>
+    </section>
+
+    <section class="section page-width" aria-labelledby="architecture-title">
+      <div class="section__heading"><div><p class="section-kicker">Архитектура</p><h2 id="architecture-title">Где выполняется работа</h2></div><p>Компьютер остаётся местом, где работает коннектор. Серверная часть нужна для доступа с другого устройства.</p></div>
+      <div class="architecture">
+        <div><span class="architecture__label">01 / На вашем ПК</span><strong>Распознавание и работа с Codex</strong><p>Микрофон и локальные модели обрабатывают речь. Коннектор пробует отправить текст напрямую в подтверждённую сессию Codex; при недоступности прямого канала текст остаётся для правки.</p></div>
+        <div><span class="architecture__label">02 / Для доступа с телефона · в работе</span><strong>Аккаунт, привязка и канал связи</strong><p>Отдельный сервис будет связывать ваши устройства. Содержимое истории и сообщений планируется передавать в зашифрованном виде.</p></div>
+      </div>
+    </section>
+
+    <section class="closing page-width" aria-labelledby="closing-title">
+      <div><p class="section-kicker">Следующий шаг</p><h2 id="closing-title">Начните с документации.</h2><p>Требования, управление, отправка и статус поддержки собраны на одной странице.</p></div>
+      <a class="button button--solid" href="/docs.html">Открыть документацию <span aria-hidden="true">→</span></a>
+    </section>
+  </main>
+
+  <footer class="site-footer page-width"><span>CLI · отдельный проект</span><a href="/docs.html">Документация</a><a href="https://github.com/betalnk/cli.aiqoo/blob/main/LICENSE" rel="noopener noreferrer">Лицензия</a><span>cli.aiqoo.ru</span></footer>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/login.js" defer></script>
+  <title>Вход — CLI</title>
+</head>
+<body class="login-body">
+  <a class="skip-link" href="#main">К содержимому</a>
+  <header class="site-header"><div class="site-header__inner"><a class="brand" href="/" aria-label="CLI, главная"><span class="brand__mark" aria-hidden="true">&gt;_</span><span>cli<span class="brand__slash">/</span></span></a><nav class="site-nav" aria-label="Основная навигация"><a href="/docs.html">Документация</a><a class="site-nav__login is-current" href="/login.html" aria-current="page">Аккаунт</a></nav></div></header>
+  <main class="login-page page-width" id="main">
+    <div class="login-page__text"><h1>Ваши сессии начинаются на вашем ПК.</h1><p>Войдите в отдельный аккаунт CLI, чтобы привязать компьютер и в будущем открыть его сессии с телефона. Локальный голосовой ввод работает и без аккаунта.</p><a href="/docs.html#privacy">Как устроен доступ <span aria-hidden="true">→</span></a></div>
+    <section class="login-panel" aria-labelledby="login-title"><span class="login-panel__label">CLI / вход</span><h2 id="login-title">Войти через GitHub</h2><p>CLI сохранит подтверждённую почту и идентификатор GitHub в своей базе. Доступ к вашим репозиториям не запрашивается.</p><p id="login-error" class="form-message form-message--error" role="alert" hidden></p><a class="button button--solid" href="/api/v1/auth/github/start?next=%2Faccount.html">Продолжить с GitHub <span aria-hidden="true">→</span></a><p class="login-panel__fineprint">После входа вы попадёте в личный кабинет CLI. Привязка ПК и телефонный интерфейс пока разрабатываются.</p></section>
+  </main>
+  <footer class="site-footer page-width"><span>CLI · отдельный проект</span><a href="/docs.html">Документация</a><span>cli.aiqoo.ru</span></footer>
+</body>
+</html>

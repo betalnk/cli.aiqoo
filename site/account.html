@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/account.js"></script>
+  <title>Личный кабинет — CLI</title>
+</head>
+<body class="account-body">
+  <a class="skip-link" href="#main">К содержимому</a>
+  <header class="site-header"><div class="site-header__inner"><a class="brand" href="/" aria-label="CLI, главная"><span class="brand__mark" aria-hidden="true">&gt;_</span><span>cli<span class="brand__slash">/</span></span></a><nav class="site-nav" aria-label="Основная навигация"><a href="/docs.html">Документация</a><a class="site-nav__login is-current" href="/account.html" aria-current="page">Аккаунт</a></nav></div></header>
+  <main class="account-page page-width" id="main">
+    <div class="account-heading"><div><h1>Личный кабинет CLI</h1><p>Аккаунт и устройства этого проекта отделены от AIQOO.</p></div><button class="account-logout" id="logout" type="button" disabled>Выйти</button></div>
+    <p id="account-status" class="form-message" role="status">Проверяем вход…</p>
+    <section class="account-section account-section--workspace" aria-labelledby="sessions-title" id="workspace" hidden>
+      <div class="account-section__heading"><h2 id="sessions-title">Сессии Codex</h2><span>Сейчас доступны на ваших компьютерах</span></div>
+      <div class="workspace">
+        <div class="workspace__bar"><p id="workspace-status" class="account-inline-status" role="status">Проверяем подключение…</p><span id="workspace-live" class="workspace__live" hidden>В сети</span></div>
+        <div id="workspace-content" class="workspace__content" hidden>
+          <div class="workspace__sessions"><h3>Выберите сессию</h3><div id="session-list" class="session-list" role="group" aria-label="Доступные сессии Codex"></div></div>
+          <div class="workspace__history" id="conversation" hidden><div class="workspace__history-head"><div><h3 id="conversation-title">Диалог</h3><span id="conversation-device"></span></div><span class="workspace__history-count">Последние 3 сообщения</span></div><p id="conversation-status" class="account-inline-status" role="status">Загружаем историю…</p><ol id="message-list" class="message-list" hidden></ol>
+            <form class="compose" id="compose" hidden>
+              <label class="compose__label" for="message-draft">Сообщение</label>
+              <span id="compose-recipient" class="compose__recipient"></span>
+              <textarea id="message-draft" rows="4" maxlength="16000" placeholder="Напишите сообщение…" spellcheck="true"></textarea>
+              <div class="compose__voice"><button id="record-voice" class="compose__secondary" type="button">Записать голос</button><span id="record-status" role="status" hidden></span></div>
+              <div id="voice-preview-wrap" class="compose__preview" hidden><audio id="voice-preview" controls preload="metadata" aria-label="Прослушать запись"></audio><div><button id="transcribe-voice" class="compose__secondary" type="button">Распознать на ПК</button><button id="discard-voice" class="compose__quiet" type="button">Удалить запись</button></div></div>
+              <div class="compose__foot"><p id="send-status" role="status" hidden></p><button id="send-message" class="button button--solid" type="submit" disabled>Отправить</button></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="account-section" aria-labelledby="identity-title" id="identity" hidden><div class="account-section__heading"><h2 id="identity-title">Ваш профиль</h2></div><dl class="account-details"><div><dt>GitHub</dt><dd id="account-github"></dd></div><div><dt>Подтверждённая почта</dt><dd id="account-email"></dd></div></dl></section>
+    <section class="account-section" aria-labelledby="devices-title" id="devices" hidden><div class="account-section__heading"><h2 id="devices-title">Компьютеры</h2><span>Доступ можно отозвать в любой момент</span></div><div><p id="devices-status" class="account-inline-status" role="status">Загружаем устройства…</p><div id="device-list" class="device-list" hidden></div></div></section>
+  </main>
+  <footer class="site-footer page-width"><span>CLI · отдельный проект</span><a href="/docs.html">Документация</a><a href="https://github.com/betalnk/cli.aiqoo/blob/main/LICENSE" rel="noopener noreferrer">Лицензия</a><span>cli.aiqoo.ru</span></footer>
+</body>
+</html>

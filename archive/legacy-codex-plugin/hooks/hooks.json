@@ -1,0 +1,30 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^(startup|resume)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CodexVoice.exe --register-from-hook",
+            "commandWindows": "CodexVoice.exe --register-from-hook",
+            "timeout": 5,
+            "statusMessage": "Registering Codex voice session"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CodexVoice.exe --register-from-hook",
+            "commandWindows": "CodexVoice.exe --register-from-hook",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

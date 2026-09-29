@@ -1,0 +1,18 @@
+{
+  "name": "codex-voice",
+  "version": "0.1.0",
+  "description": "Bind the separate Windows voice companion to the current Codex session.",
+  "author": {
+    "name": "CLI project"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Codex Voice",
+    "shortDescription": "Connect local voice input to this Codex session.",
+    "longDescription": "Guides an exact-session binding through the separate Windows companion and helps check its state. The companion handles the microphone and local speech recognition; installing this plugin does not install or start it.",
+    "developerName": "CLI project",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "Connect the Windows voice companion to this Codex session and check the binding."
+  }
+}

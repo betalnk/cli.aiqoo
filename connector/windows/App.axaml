@@ -1,0 +1,27 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="CodexVoice.App">
+  <Application.Styles>
+    <FluentTheme />
+  </Application.Styles>
+  <TrayIcon.Icons>
+    <TrayIcons>
+      <TrayIcon Icon="/Assets/codex-voice.ico" ToolTipText="Codex Voice · Ctrl+Alt+Пробел">
+        <TrayIcon.Menu>
+          <NativeMenu>
+            <NativeMenuItem Header="Codex Voice · Ctrl+Alt+Пробел" IsEnabled="False" />
+            <NativeMenuItemSeparator />
+            <NativeMenuItem Header="Остановить озвучивание" Click="StopPlayback_OnClick" />
+            <NativeMenuItem Header="Быстрая запись · клавиша…" Click="QuickHotkeySettings_OnClick" />
+            <NativeMenuItem Header="Подключить телефон…" Click="Pairing_OnClick" />
+            <NativeMenuItem Header="Аккаунт CLI" Click="OpenCliAccount_OnClick" />
+            <NativeMenuItemSeparator />
+            <NativeMenuItem Header="Проверить версию" Click="CheckVersion_OnClick" />
+            <NativeMenuItem Header="Версии на GitHub" Click="OpenReleases_OnClick" />
+            <NativeMenuItem Header="Выход" Click="Exit_OnClick" />
+          </NativeMenu>
+        </TrayIcon.Menu>
+      </TrayIcon>
+    </TrayIcons>
+  </TrayIcon.Icons>
+</Application>

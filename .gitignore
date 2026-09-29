@@ -1,0 +1,42 @@
+# Local configuration and credentials
+.env
+.env.*
+*.pem
+*.pfx
+*.key
+id_rsa*
+id_ed25519*
+
+# Local session data and logs
+*.db
+*.sqlite
+*.sqlite3
+*.log
+*.jsonl
+
+# Build output and downloads
+bin/
+obj/
+dist/
+publish/
+*.zip
+*.7z
+*.exe
+*.dll
+*.pdb
+*.bin
+*.gguf
+*.onnx
+vosk-model-*/
+
+# Editor and machine state
+.vs/
+.vscode/
+.idea/
+.codex/
+.unlazy/
+__pycache__/
+.pytest_cache/
+.venv/
+.impeccable/review/
+server/

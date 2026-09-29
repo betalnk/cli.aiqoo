@@ -1,0 +1,11 @@
+# CLI
+
+CLI is a separate developer product proposed for `cli.aiqoo.ru`. It shares only a parent domain with AIQOO. Its accounts, user database, API and device connections are independent of AIQOO Core and platform accounts.
+
+The existing Windows Voice Connector works with visible Codex CLI tabs in CMD and PowerShell. It captures speech and runs Vosk/Whisper locally, shows editable text, and attempts delivery to the selected exact session with the `[via Voice Connector]` marker. The owner confirmed both short and long local messages reached the intended session after Enter closed the overlay. A buildable desktop source package is in `connector/windows`; no installer or binary has been released.
+
+The public site uses a restrained developer-documentation style. It explains the current Windows prototype honestly, links to the GitHub project, and provides an independent CLI account. A separate private backend implements GitHub sign-in, a verified email stored in CLI's own database, revocable web sessions, and pending device pairing. It is not deployed. No paid tier is planned.
+
+The local phone workspace code lets an authenticated user link their PC, choose an available exact Codex session, and see three recent user/AI messages updating live. The desktop and browser encrypt these history snapshots with their paired key; the private server routes them without storing the conversation. The phone can record PCM audio, ask the PC to transcribe it locally, edit the returned text, and explicitly send a one-line message to the selected session. The PC must be unlocked and that session visible. A send is confirmed only after a matching entry appears in the exact Codex rollout; an uncertain result is never retried automatically. QR claiming and desktop confirmation are wired in source, but the service is not deployed, so phone access is not yet live. The private server neither transcribes audio nor runs Codex commands.
+
+Product constraints: no silent queue, no automatic switch to a different session, and no claim of delivery until the selected Codex session provides a receipt. Existing user TUI sessions and drafts must not be reset. Claude Code, macOS and Linux are future adapters, not current support.
