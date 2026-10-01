@@ -2,7 +2,7 @@
 
 | Area | Status |
 | --- | --- |
-| Windows voice input for Codex CLI | Buildable local source package in [`connector/windows/`](../connector/windows/); no public installer or released binary yet. |
+| Windows voice input for Codex CLI | Buildable source package and [installer script](../connector/windows/installer/README.md). A bundled-model installer passed a local install and self-test on 2026-10-01; no public binary release yet. |
 | Codex plugin | An [archived hook experiment](../archive/legacy-codex-plugin/) is preserved for reference. The current local Windows flow does not require hooks, plugin trust, a shared app-server, or restarting an open Codex tab. |
 | Local Vosk/Whisper recognition and editable text | Implemented in the local prototype; recognition quality and full user flow still need device testing. |
 | Selected-session delivery | The current local prototype discovers visible Codex CLI tabs in CMD/PowerShell, matches the selected tab to an exact session, then validates its window, tab and session again before sending keys. The owner confirmed short and long messages with the `[via Voice Connector]` prefix reached the selected live session, and the overlay closed immediately after Enter. A Windows `SendInput` result is not a Codex receipt; the prototype separately checks the selected session rollout. |

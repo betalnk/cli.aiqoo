@@ -15,6 +15,7 @@ internal sealed class CliDeviceConnection : IDisposable
     private readonly VoicePairingManager _manager;
     private readonly Action<string> _status;
     private readonly Func<bool> _localInputIdle;
+    private readonly Func<VoicePairingApprovalRequest, CancellationToken, Task<bool>> _approve;
     private readonly Uri _socketUri;
     private readonly string _origin;
     private readonly SemaphoreSlim _registrationWake = new(0, 1);
@@ -22,12 +23,14 @@ internal sealed class CliDeviceConnection : IDisposable
     private Task? _run;
 
     internal CliDeviceConnection(VoicePairingStore store, VoicePairingManager manager,
-        Action<string> status, Func<bool>? localInputIdle = null, Uri? socketUri = null)
+        Action<string> status, Func<bool>? localInputIdle = null, Uri? socketUri = null,
+        Func<VoicePairingApprovalRequest, CancellationToken, Task<bool>>? approve = null)
     {
         _store = store;
         _manager = manager;
         _status = status;
         _localInputIdle = localInputIdle ?? (() => false);
+        _approve = approve ?? ((_, _) => Task.FromResult(false));
         _socketUri = socketUri ?? new Uri("wss://cli.aiqoo.ru/api/v1/ws/device");
         if (_socketUri.Scheme != "wss" || _socketUri.Query.Length > 0
             || _socketUri.Fragment.Length > 0 || _socketUri.UserInfo.Length > 0)
@@ -86,12 +89,15 @@ internal sealed class CliDeviceConnection : IDisposable
                 await using var commands = new CliCommandManager(_store,
                     registration.DeviceId, history.SendJsonAsync, _localInputIdle,
                     connected.Token);
+                await using var approvals = new CliPairingApprovalCoordinator(_manager, _approve,
+                    (claim, accepted, cancellation) => SendDecisionAsync(history, claim.EventId,
+                        claim.PairId, claim.ClientId, accepted, cancellation), connected.Token);
                 foreach (var decision in _manager.PendingDecisions())
                     await SendDecisionAsync(history, decision.EventId, decision.PairId,
                         decision.ClientId, accepted: true, connected.Token);
                 var heartbeat = new DeviceHeartbeat();
                 var heartbeatTask = RunHeartbeatAsync(history, heartbeat, connected);
-                try { await ReceiveLoopAsync(socket, history, commands, heartbeat, connected.Token); }
+                try { await ReceiveLoopAsync(socket, history, commands, approvals, heartbeat, connected.Token); }
                 finally
                 {
                     connected.Cancel();
@@ -117,7 +123,7 @@ internal sealed class CliDeviceConnection : IDisposable
 
     private async Task ReceiveLoopAsync(ClientWebSocket socket,
         CliHistoryWatchManager history, CliCommandManager commands,
-        DeviceHeartbeat heartbeat, CancellationToken token)
+        CliPairingApprovalCoordinator approvals, DeviceHeartbeat heartbeat, CancellationToken token)
     {
         var buffer = new byte[4096];
         while (socket.State == WebSocketState.Open && !token.IsCancellationRequested)
@@ -156,7 +162,7 @@ internal sealed class CliDeviceConnection : IDisposable
                     return;
                 }
                 if (kind.GetString() == "paired")
-                    await HandleClaimAsync(history, root, token);
+                    QueueClaim(approvals, root);
                 else if (kind.GetString() == "pair_accepted")
                 {
                     if (TryReadIds(root, out var eventId, out var pairId, out var clientId))
@@ -202,22 +208,27 @@ internal sealed class CliDeviceConnection : IDisposable
         }
     }
 
-    private async Task HandleClaimAsync(CliHistoryWatchManager history, JsonElement root,
-        CancellationToken token)
+    private static void QueueClaim(CliPairingApprovalCoordinator approvals, JsonElement root)
     {
         if (!TryReadIds(root, out var eventId, out var pairId, out var clientId)) return;
-        var accepted = false;
         try
         {
             var claim = new VoicePairingClaim(eventId, pairId, clientId,
                 root.GetProperty("clientPublicKey").GetString()!,
                 root.GetProperty("proof").GetString()!);
-            _manager.Accept(claim);
-            accepted = true;
+            approvals.Queue(claim, DisplayText(root, "accountEmail", 254),
+                DisplayText(root, "clientName", 80));
         }
         catch (Exception) { /* Invalid or expired QR proof is rejected without sending its contents anywhere. */ }
+    }
 
-        await SendDecisionAsync(history, eventId, pairId, clientId, accepted, token);
+    private static string DisplayText(JsonElement root, string name, int limit)
+    {
+        if (!root.TryGetProperty(name, out var value) || value.ValueKind != JsonValueKind.String)
+            return "";
+        var text = value.GetString() ?? "";
+        if (text.Length > limit || text.Any(c => char.IsControl(c))) return "";
+        return text;
     }
 
     private static bool TryReadIds(JsonElement root, out string eventId,

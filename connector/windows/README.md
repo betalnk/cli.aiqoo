@@ -4,6 +4,8 @@ This is the current local Windows Codex CLI voice prototype, packaged so it buil
 
 The local sender checks the selected window, terminal and exact Codex session before keyboard input, and watches that session's rollout afterward. Windows `SendInput` alone is not a delivery receipt. A changed focus or tab can leave the result uncertain; the app retains a recoverable draft and does not retry an uncertain send automatically. Long-dictation delivery was confirmed on the local Windows prototype after Enter closed the overlay and the message appeared in the selected Codex session. The prototype does not need a shared app-server, plugin, or restart of an existing Codex tab.
 
+Text dictated into an active Codex question arrives as a structured question answer. The receipt check recognizes the exact answer in a newly written user record for the selected session; mentioning it in question metadata or an assistant quote does not count. It remains a question answer. Before inserting keys, the sender also checks the Windows integrity level of the recipient process. Windows blocks input into a process with higher privileges, and the connector preserves the draft with a specific explanation.
+
 ## Requirements
 
 - Windows x64, .NET 8 SDK for building, microphone access, and a signed-in Codex CLI. This package has been built on Windows; other operating systems are not supported.
@@ -39,4 +41,4 @@ For another model directory, run `Start-CodexVoice.ps1 -ModelsRoot 'D:\MyModels'
 
 `src/` contains the connector UI, session identification, delivery, CLI account pairing, encrypted history reader, playback and local tests. `asr/` contains seven extracted audio/recognition source files. The package has no project reference to LiveTranscribeRu. Some earlier direct app-server helpers remain compiled for protocol tests, but the current desktop send path uses the foreground terminal. The legacy AIQOO Core phone relay and its pairing implementation are absent.
 
-This is a source package, not an installer or a released binary. The project's source is public for inspection under the repository's [view-only terms](../../LICENSE). See [third-party notices](THIRD_PARTY.md) for the packages and separately downloaded models.
+The source package has a [Windows installer build](installer/README.md). A local installer with bundled models was built and installed on 2026-10-01; no public binary release has been published yet. The project's source is public for inspection under the repository's [view-only terms](../../LICENSE). See [third-party notices](THIRD_PARTY.md) for the packages and models.

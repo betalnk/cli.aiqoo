@@ -8,7 +8,7 @@ namespace CodexVoice;
 internal sealed record VoiceDeviceRegistration(string DeviceId, string DeviceToken);
 internal sealed record VoicePendingPairSecret(string PairId, byte[] Secret, long ExpiresAtUnixSeconds);
 internal sealed record VoicePendingPairDecision(string EventId, string PairId, string ClientId,
-    string ClientPublicKey, string Proof, long ExpiresAtUnixSeconds);
+    string ClientPublicKey, string Proof, long ExpiresAtUnixSeconds, bool LocallyApproved = false);
 
 /// <summary>Windows-user-protected device identity, relay credential, and per-client AES keys.</summary>
 internal sealed class VoicePairingStore
@@ -203,6 +203,8 @@ internal sealed class VoicePairingStore
     internal void SaveDecision(VoicePendingPairDecision decision)
     {
         ValidateDecision(decision);
+        if (!decision.LocallyApproved)
+            throw new CryptographicException("A CLI pairing decision requires local approval.");
         var path = DecisionPath(decision.EventId);
         var value = JsonSerializer.SerializeToUtf8Bytes(decision);
         try
@@ -227,8 +229,12 @@ internal sealed class VoicePairingStore
             ValidateDecision(decision);
             if (decision.EventId != eventId)
                 throw new CryptographicException("CLI pairing decision ID changed.");
-            if (decision.ExpiresAtUnixSeconds <= now.ToUnixTimeSeconds())
+            // Old builds wrote automatic decisions. They are not evidence of owner consent.
+            if (!decision.LocallyApproved || decision.ExpiresAtUnixSeconds <= now.ToUnixTimeSeconds())
             {
+                // An approved decision may have reached the server even if its ACK was
+                // lost. Expiry ends decision replay, not that already active client's key.
+                if (!decision.LocallyApproved) RemoveClientKey(decision.ClientId);
                 File.Delete(path);
                 return null;
             }

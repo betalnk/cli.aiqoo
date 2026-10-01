@@ -85,9 +85,7 @@ internal static class CodexHistoryReader
                 new { method = "thread/read", id = 2, @params = new { threadId = id, includeTurns = false } }, token))
             {
                 var thread = RequireResult(metadata.RootElement).GetProperty("thread");
-                if (!string.Equals(RequiredString(thread, "id"), id, StringComparison.OrdinalIgnoreCase)
-                    || OptionalString(thread, "source") != "cli")
-                    throw new InvalidOperationException("Сессия не принадлежит Codex CLI.");
+                ValidateThreadIdentity(thread, id);
             }
 
             CodexHistoryPage page;
@@ -151,9 +149,16 @@ internal static class CodexHistoryReader
         using var response = await RequestAsync(input, lines, requestId,
             new { method = "thread/read", id = requestId, @params = new { threadId, includeTurns = true } }, token);
         var thread = RequireResult(response.RootElement).GetProperty("thread");
-        if (OptionalString(thread, "source") != "cli")
-            throw new InvalidOperationException("Сессия не принадлежит Codex CLI.");
+        ValidateThreadIdentity(thread, threadId);
         return ParseFallbackPage(thread, pageSize, offset);
+    }
+
+    internal static void ValidateThreadIdentity(JsonElement thread, string threadId)
+    {
+        // source records where a thread was created. A vscode or exec thread can
+        // later be resumed in the selected CLI tab; only its exact UUID identifies it.
+        if (!string.Equals(RequiredString(thread, "id"), threadId, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Codex вернул историю другой сессии.");
     }
 
     internal static CodexHistoryPage ParseFallbackPage(JsonElement thread, int pageSize, int offset)

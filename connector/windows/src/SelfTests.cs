@@ -23,6 +23,8 @@ internal static class SelfTests
             Check(!SessionResolver.TryResolveTitle("Работа над задачей | demo",
                 threads.Append(("thread-duplicate", "Работа над задачей", @"D:\other\demo")), out _));
 
+            SessionSourceSelfTests.Run();
+
             var buffer = new TranscriptBuffer();
             buffer.SetPartial(" первая  фраза ");
             Check(buffer.Preview == "первая фраза" && buffer.Final.Length == 0);
@@ -50,8 +52,10 @@ internal static class SelfTests
             CodexRolloutReceiptVerifierSelfTests.RunAsync().GetAwaiter().GetResult();
             VoiceDraftStoreSelfTests.Run();
             ForegroundTerminalSenderSelfTests.Run();
+            WindowsInputIntegritySelfTests.Run();
             VoicePairingCryptoSelfTests.Run();
             VoicePairingRecoverySelfTests.Run();
+            CliPairingApprovalSelfTests.RunAsync().GetAwaiter().GetResult();
             CliHistoryCryptoSelfTests.Run();
             CliCommandSelfTests.RunAsync().GetAwaiter().GetResult();
 

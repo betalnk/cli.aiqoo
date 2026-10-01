@@ -28,13 +28,53 @@ internal static class VoiceDraftStoreSelfTests
             Check(recovered.Text == "уточнённый текст");
             Check(recovered.Status == "Получение Codex неизвестно");
 
-            store.Delete(originalId);
+            // A new activation keeps its own recipient even when another session
+            // has the newest saved draft. Meaningful text remains recoverable.
+            Check(store.LoadForActivation(Guid.NewGuid().ToString("D")) is null);
+            Check(store.LoadForActivation(originalId) == recovered);
+            var emptyId = Guid.NewGuid().ToString("D");
+            var empty = VoiceDraft.Capture(emptyId, selected, " \r\n\t", "Сохранён для проверки");
+            store.Save(empty);
+            Check(store.LoadForActivation(emptyId) is null);
+            Check(store.Load(emptyId) == empty);
+            Check(store.LoadForActivation(originalId) == recovered);
+            store.Delete(emptyId);
+
+            // Fresh activation must neither restore an uncertain message nor replace
+            // the current captured session with its older, different recipient.
+            var oldBytes = File.ReadAllBytes(Path.Combine(root, originalId + ".json"));
+            Check(store.PreserveForFreshCapture(selectedId) is null);
+            Check(store.Load(originalId) == recovered);
+            var preserved = store.PreserveForFreshCapture(originalId)
+                ?? throw new InvalidOperationException("Earlier draft was not preserved.");
+            Check(File.ReadAllBytes(preserved).SequenceEqual(oldBytes));
             Check(store.Load(originalId) is null);
+            Check(store.LoadForActivation(originalId) is null);
             Check(store.LoadNewest() is null);
+            Check(store.PreserveForFreshCapture(originalId) is null);
+
+            // A new recording may be saved and received without deleting the
+            // preserved message or turning the next activation into recovery.
+            var current = VoiceDraft.Capture(originalId, selected, "новая запись", "Ожидает отправки");
+            store.Save(current);
+            Check(store.Load(originalId) == current);
+            store.Delete(originalId);
+            Check(File.Exists(preserved));
+            Check(File.ReadAllBytes(preserved).SequenceEqual(oldBytes));
+
+            store.Save(empty);
+            var preservedEmpty = store.PreserveForFreshCapture(emptyId);
+            Check(preservedEmpty is not null && File.Exists(preservedEmpty));
+            Check(store.Load(emptyId) is null);
         }
         finally
         {
-            if (Directory.Exists(root)) Directory.Delete(root);
+            var fullRoot = Path.GetFullPath(root);
+            var tempRoot = Path.GetFullPath(Path.GetTempPath());
+            if (!fullRoot.StartsWith(tempRoot, StringComparison.OrdinalIgnoreCase)
+                || !Path.GetFileName(fullRoot).StartsWith("CodexVoiceDraftTest-", StringComparison.Ordinal))
+                throw new InvalidOperationException("Unexpected draft test cleanup path.");
+            if (Directory.Exists(fullRoot)) Directory.Delete(fullRoot, recursive: true);
         }
     }
 

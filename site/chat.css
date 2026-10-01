@@ -1,0 +1,90 @@
+.account-page { width: min(1320px, calc(100% - 48px)); padding: 20px 0 24px; }
+.account-heading { align-items: center; gap: 18px; padding-bottom: 22px; }
+.account-heading h1 { font-size: 1.35rem; letter-spacing: -.02em; line-height: 1.3; }
+.account-heading p { margin-top: 5px; font-size: .8rem; }
+.account-section--workspace { display: block; border: 0; padding: 0; }
+.account-section--workspace > .account-section__heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
+.account-section--workspace .account-section__heading h2 { font-size: 1rem; }
+.account-section--workspace .account-section__heading span { margin: 0; font-size: .78rem; }
+.workspace { height: max(540px, calc(100dvh - 230px)); max-height: 900px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.workspace__bar { min-height: 43px; padding: 9px 18px; border-bottom: 1px solid var(--line); background: var(--paper); }
+.workspace__bar .account-inline-status { font-size: .78rem; }
+.workspace__content { flex: 1; min-height: 0; grid-template-columns: 260px minmax(0, 1fr); gap: 0; margin: 0; }
+.workspace__sessions { min-height: 0; overflow-y: auto; padding: 18px 12px; border-right: 1px solid var(--line); background: var(--paper); }
+.workspace__sessions h3 { padding: 0 10px; color: var(--muted); font-size: .76rem; font-weight: 600; }
+.session-list { margin-top: 12px; gap: 5px; }
+.session-choice { padding: 13px 11px; min-height: 66px; border: 1px solid transparent; border-radius: 8px; background: transparent; }
+.session-choice:hover { border-color: var(--line); background: var(--surface); }
+.session-choice[aria-pressed="true"] { border-color: #b6cdbb; background: #e7f0e7; }
+.session-choice strong { font-size: .86rem; }
+.session-choice span { font-size: .74rem; }
+.workspace__history { display: flex; flex-direction: column; min-height: 0; height: 100%; padding: 0; border: 0; }
+.workspace__history-head { flex: 0 0 auto; align-items: center; padding: 17px 24px; border-bottom: 1px solid var(--line); }
+.workspace__history-head > div { min-width: 0; }
+.workspace__history-head h3 { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: .98rem; }
+.workspace__history-head span { font-size: .74rem; }
+.conversation-scroll { min-height: 0; flex: 1; overflow-y: auto; padding: 24px; }
+.conversation-scroll:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+.conversation-scroll .account-inline-status { margin: 0; font-size: .84rem; }
+.message-list { display: flex; flex-direction: column; gap: 25px; margin: 0; }
+.message-list > li { width: min(100%, 74ch); padding: 0; border: 0; }
+.message-list > .message-list__row--user { align-self: flex-end; max-width: 85%; padding: 14px 17px; border-radius: 14px 14px 4px 14px; background: var(--accent-soft); }
+.message-list__head { align-items: center; gap: 16px; font-size: .72rem; }
+.message-list__head strong { font-size: .79rem; }
+.message-list__body { margin-top: 8px; font-size: .96rem; line-height: 1.65; overflow-wrap: anywhere; }
+.message-list__listen { min-height: 36px; margin-top: 11px; padding: 0 10px; border: 0; background: var(--paper); font-size: .76rem; }
+.compose { flex: 0 0 auto; margin: 0; padding: 14px 24px 18px; background: var(--surface); border-top: 1px solid var(--line); }
+.compose__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.compose__recipient { margin: 0 0 8px; font-size: .72rem; }
+.compose textarea { min-height: 66px; max-height: 180px; margin: 0; padding: 11px 13px; resize: none; border-radius: 10px; font-family: inherit; font-size: 1rem; line-height: 1.45; caret-color: var(--accent); }
+.compose textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.compose__voice { gap: 8px; margin-top: 8px; }
+.compose__secondary, .compose__quiet { min-height: 36px; font-size: .76rem; }
+.compose__foot { align-items: center; margin-top: 9px; gap: 10px; }
+.compose__foot > div { min-width: 0; }
+.compose__foot p { margin-top: 5px; font-size: .76rem; }
+.compose__foot .button { min-height: 40px; padding: 0 17px; }
+.compose__foot .button:hover { transform: none; }
+.compose__keyboard-hint { color: var(--muted); font-size: .7rem; }
+.compose__preview { margin-top: 8px; padding: 8px; }
+.account-settings { margin-top: 16px; }
+.account-settings summary { width: fit-content; min-height: 40px; padding: 9px 0; color: var(--ink-soft); font-size: .81rem; cursor: pointer; }
+.account-settings summary:hover { color: var(--accent-dark); }
+.account-settings summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.account-settings .account-section { padding: 24px 0; }
+.account-body > .site-footer { min-height: 42px; padding: 14px 0; font-size: .73rem; }
+.workspace__sessions, .conversation-scroll { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+@media (max-width: 760px) {
+  .account-page { width: calc(100% - 28px); padding-top: 14px; }
+  .account-heading { padding-bottom: 15px; }
+  .account-heading h1 { font-size: 1.06rem; }
+  .account-heading p { display: none; }
+  .account-logout { min-height: 36px; margin: 0; padding: 0 11px; font-size: .76rem; }
+  .account-section--workspace > .account-section__heading span { display: none; }
+  .workspace { height: max(580px, calc(100dvh - 185px)); max-height: none; }
+  .workspace__bar { min-height: 36px; padding: 7px 12px; }
+  .workspace__bar .account-inline-status { max-width: 75%; font-size: .72rem; }
+  .workspace__content { display: flex; flex-direction: column; }
+  .workspace__sessions { flex: 0 0 auto; overflow: hidden; padding: 9px 10px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .workspace__sessions h3 { display: none; }
+  .session-list { flex-direction: row; gap: 7px; margin: 0; padding: 0; overflow-x: auto; }
+  .session-choice { min-width: 195px; max-width: 195px; min-height: 56px; padding: 10px; }
+  .session-choice strong { font-size: .79rem; }
+  .session-choice span { font-size: .69rem; }
+  .workspace__history { flex: 1; margin: 0; padding: 0; border: 0; }
+  .workspace__history-head { padding: 12px 14px; gap: 8px; }
+  .workspace__history-head h3 { font-size: .85rem; }
+  .workspace__history-head span { font-size: .68rem; }
+  .workspace__history-count { max-width: 70px; }
+  .conversation-scroll { padding: 17px 14px; }
+  .message-list { gap: 21px; }
+  .message-list > .message-list__row--user { max-width: 94%; padding: 12px 14px; }
+  .message-list__body { font-size: .9rem; line-height: 1.6; }
+  .compose { padding: 10px 12px 12px; }
+  .compose__recipient { font-size: .68rem; }
+  .compose textarea { min-height: 60px; font-size: 1rem; }
+  .compose__foot { flex-direction: row; align-items: center; }
+  .compose__foot .button { width: auto; min-height: 38px; padding: 0 13px; }
+  .compose__keyboard-hint { display: none; }
+  .account-body > .site-footer { display: none; }
+}

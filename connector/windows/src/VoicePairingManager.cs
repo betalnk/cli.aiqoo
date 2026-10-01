@@ -13,6 +13,8 @@ internal sealed record VoicePairingAccepted(
     string EventId, string PairId, string ClientId, string ClientPublicKey,
     string Proof, DateTimeOffset ReplayUntil);
 
+internal sealed record VoicePairingVerification(DateTimeOffset ExpiresAt, bool AlreadyApproved);
+
 /// <summary>
 /// Keeps QR pair secrets in memory until expiry. Relay pair IDs and codes enter through Begin;
 /// only a locally verified claim can create a protected client key.
@@ -66,7 +68,52 @@ internal sealed class VoicePairingManager : IDisposable
         finally { CryptographicOperations.ZeroMemory(secret); }
     }
 
-    internal VoicePairingAccepted Accept(VoicePairingClaim claim)
+    /// <summary>Checks the exact browser proof without granting a key or recording consent.</summary>
+    internal VoicePairingVerification VerifyClaim(VoicePairingClaim claim)
+    {
+        ArgumentNullException.ThrowIfNull(claim);
+        VoicePairingCrypto.ValidateHexId(claim.EventId, nameof(claim.EventId));
+        VoicePairingCrypto.ValidateHexId(claim.PairId, nameof(claim.PairId));
+        VoicePairingCrypto.ValidateHexId(claim.ClientId, nameof(claim.ClientId));
+        using var clientKey = VoicePairingCrypto.ImportPublicKey(claim.ClientPublicKey);
+        var now = _clock.GetUtcNow();
+        lock (_gate)
+        {
+            ThrowIfDisposed();
+            PruneExpired(now);
+            var durable = _store.LoadDecision(claim.EventId, now);
+            if (durable is not null)
+            {
+                if (durable.PairId != claim.PairId || durable.ClientId != claim.ClientId
+                    || durable.ClientPublicKey != claim.ClientPublicKey || durable.Proof != claim.Proof)
+                    throw new CryptographicException("Pairing event ID was reused with different claim data.");
+                return new(DateTimeOffset.FromUnixTimeSeconds(durable.ExpiresAtUnixSeconds), true);
+            }
+            var fromMemory = _pending.TryGetValue(claim.PairId, out var pending);
+            if (!fromMemory)
+            {
+                var saved = _store.LoadPendingPair(claim.PairId, now)
+                    ?? throw new CryptographicException("No unexpired local secret for this pairing.");
+                pending = new PendingPair(saved.Secret,
+                    DateTimeOffset.FromUnixTimeSeconds(saved.ExpiresAtUnixSeconds));
+            }
+            try
+            {
+                if (!VoicePairingCrypto.VerifyProof(pending!.Secret, claim.PairId,
+                        clientKey.ExportSubjectPublicKeyInfo(), claim.Proof))
+                    throw new CryptographicException("Browser pairing proof did not match the QR secret.");
+                return new(pending.ExpiresAt, false);
+            }
+            finally { if (!fromMemory) pending!.Dispose(); }
+        }
+    }
+
+    // The retired relay adapter still compiles in the original desktop tree, but must
+    // never grant access through its former automatic Accept entry point.
+    internal VoicePairingAccepted Accept(VoicePairingClaim claim) =>
+        throw new InvalidOperationException("Explicit PC approval is required.");
+
+    internal VoicePairingAccepted AcceptApproved(VoicePairingClaim claim)
     {
         ArgumentNullException.ThrowIfNull(claim);
         VoicePairingCrypto.ValidateHexId(claim.EventId, nameof(claim.EventId));
@@ -115,9 +162,17 @@ internal sealed class VoicePairingManager : IDisposable
                 try { _store.SaveClientKey(claim.ClientId, aesKey); }
                 finally { CryptographicOperations.ZeroMemory(aesKey); }
 
-                _store.SaveDecision(new VoicePendingPairDecision(claim.EventId, claim.PairId,
-                    claim.ClientId, claim.ClientPublicKey, claim.Proof,
-                    pending.ExpiresAt.ToUnixTimeSeconds()));
+                try
+                {
+                    _store.SaveDecision(new VoicePendingPairDecision(claim.EventId, claim.PairId,
+                        claim.ClientId, claim.ClientPublicKey, claim.Proof,
+                        pending.ExpiresAt.ToUnixTimeSeconds(), LocallyApproved: true));
+                }
+                catch
+                {
+                    _store.RemoveClientKey(claim.ClientId);
+                    throw;
+                }
                 if (fromMemory) _pending.Remove(claim.PairId);
                 accepted = new VoicePairingAccepted(claim.EventId, claim.PairId, claim.ClientId,
                     claim.ClientPublicKey, claim.Proof, pending.ExpiresAt);

@@ -2,7 +2,7 @@
 
 CLI is an independent project for working with local coding-agent sessions. The current Windows prototype transcribes speech locally, lets you edit the text, and targets a chosen Codex CLI session. The local phone interface code uses a separate account and an encrypted connection to your own PC; it is not deployed yet.
 
-The public website draft is in [`site/`](site/). It is not deployed at `cli.aiqoo.ru` yet. A buildable Windows source package is in [`connector/windows/`](connector/windows/); there is no public installer or released binary. See [current status](docs/status.md) before using the project.
+The public website draft is in [`site/`](site/). It is not deployed at `cli.aiqoo.ru` yet. A buildable Windows source package and [installer builder](connector/windows/installer/README.md) are in [`connector/windows/`](connector/windows/); there is no public installer or released binary. See [current status](docs/status.md) before using the project.
 
 ## Website preview
 

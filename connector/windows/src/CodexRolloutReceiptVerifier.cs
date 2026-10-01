@@ -121,14 +121,51 @@ internal static class CodexRolloutReceiptVerifier
                 if (StringPropertyEquals(item, "type", "input_text")
                     && item.TryGetProperty("text", out var value)
                     && value.ValueKind == JsonValueKind.String
-                    && string.Equals(value.GetString()?.TrimEnd('\r', '\n'),
-                        expectedText.TrimEnd('\r', '\n'), StringComparison.Ordinal))
+                    && IsMatchingUserText(value.GetString(), expectedText))
                     return true;
             }
         }
         catch (JsonException)
         {
             // Ignore unrelated malformed or in-progress log lines.
+        }
+        return false;
+    }
+
+    private static bool IsMatchingUserText(string? text, string expectedText)
+    {
+        if (text is null) return false;
+        text = text.TrimEnd('\r', '\n');
+        expectedText = expectedText.TrimEnd('\r', '\n');
+        if (string.Equals(text, expectedText, StringComparison.Ordinal)) return true;
+
+        // The CLI sends text entered in an active async question as a structured
+        // user reply. Only the exact answer is a receipt; question wording and
+        // other metadata mentioning the text are not evidence of its delivery.
+        const string open = "<send_user_message_question_reply>";
+        const string close = "</send_user_message_question_reply>";
+        if (!text.StartsWith(open, StringComparison.Ordinal)
+            || !text.EndsWith(close, StringComparison.Ordinal)) return false;
+        try
+        {
+            using var reply = JsonDocument.Parse(text.Substring(open.Length,
+                text.Length - open.Length - close.Length));
+            if (reply.RootElement.ValueKind != JsonValueKind.Array) return false;
+            foreach (var item in reply.RootElement.EnumerateArray())
+            {
+                if (item.ValueKind == JsonValueKind.Object
+                    && item.TryGetProperty("answer", out var answer)
+                    && answer.ValueKind == JsonValueKind.String
+                    && item.TryGetProperty("questionItemId", out var questionId)
+                    && questionId.ValueKind == JsonValueKind.String
+                    && !string.IsNullOrEmpty(questionId.GetString())
+                    && string.Equals(answer.GetString()?.TrimEnd('\r', '\n'),
+                        expectedText, StringComparison.Ordinal)) return true;
+            }
+        }
+        catch (JsonException)
+        {
+            // An incomplete or unrelated reply is not a delivery receipt.
         }
         return false;
     }

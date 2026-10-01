@@ -1,12 +1,13 @@
-using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Buffers;
+using System.Text;
 
 namespace CodexVoice;
 
 internal sealed record ForegroundSendResult(bool Entered, string Message, string SubmittedText);
 
 /// <summary>
-/// Sends one safe line to the captured, visible terminal. Keyboard insertion is not a Codex receipt.
+/// Sends literal Unicode text to the captured, visible terminal. Keyboard insertion is not a Codex receipt.
 /// </summary>
 internal static class ForegroundTerminalSender
 {
@@ -23,12 +24,10 @@ internal static class ForegroundTerminalSender
     private const uint KeyEventKeyUp = 0x0002;
     private const uint KeyEventUnicode = 0x0004;
     private const ushort VirtualKeyReturn = 0x0D;
+    private const ushort VirtualKeyShift = 0x10;
     private const ushort VirtualKeyF20 = 0x83;
     private static readonly ushort[] ModifierKeys = [0x10, 0x11, 0x12, 0x5B, 0x5C];
     private static readonly SemaphoreSlim SendGate = new(1, 1);
-
-    // A misplaced Enter must not be able to turn shell operators in dictated text into a command.
-    private const string ShellMetacharacters = "&|<>^%!$`\"';(){}[]#@*\\";
 
     internal static async Task<ForegroundSendResult> SendAsync(
         CapturedSession selected, string text, CancellationToken token = default,
@@ -36,7 +35,7 @@ internal static class ForegroundTerminalSender
     {
         var submittedText = PrepareText(text);
         if (submittedText is null)
-            return new(false, "Текст содержит перенос строки, управляющий или командный символ либо слишком длинный. Проверьте черновик и отправьте его вручную.", text ?? "");
+            return new(false, "Сообщение пустое, слишком длинное или содержит недопустимый управляющий символ. Черновик сохранён.", text ?? "");
         if (selected is null || selected.Window == IntPtr.Zero)
             return new(false, "Окно Codex не определено. Текст не введён.", submittedText);
 
@@ -50,6 +49,8 @@ internal static class ForegroundTerminalSender
 
             if (!InputAllowed(remoteInputGuard) || !SessionResolver.TryValidate(selected, out _))
                 return new(false, "Выбранная сессия Codex изменилась. Текст не введён.", submittedText);
+            if (!WindowsInputIntegrity.TryCheckTarget(selected.WindowProcessId, out var integrityError))
+                return new(false, integrityError, submittedText);
             if (ModifiersHeld())
                 return new(false, "Отпустите клавиши-модификаторы и повторите отправку.", submittedText);
 
@@ -65,21 +66,25 @@ internal static class ForegroundTerminalSender
             // Codex treats rapid key events as a paste. Keep batches small enough for
             // the terminal to consume while checking the exact target between batches.
             // A partial batch is never retried: Codex may already contain part of it.
-            for (var offset = 0; offset < submittedText.Length; offset += InputChunkChars)
+            for (var offset = 0; offset < submittedText.Length;)
             {
                 if (!IsCurrentTarget(selected, remoteInputGuard) || ModifiersHeld())
                     return new(false, enteredText
                         ? "Текст введён частично, но вкладка Codex изменилась. Enter не отправлен; проверьте терминал."
                         : "Активное окно или вкладка Codex изменились. Текст не введён.", submittedText);
                 token.ThrowIfCancellationRequested();
-                var length = Math.Min(InputChunkChars, submittedText.Length - offset);
+                var length = TextChunkLength(submittedText, offset);
                 var unicodeEvents = BuildTextEvents(submittedText.AsSpan(offset, length));
                 var inserted = SendInput((uint)unicodeEvents.Length, unicodeEvents,
                     Marshal.SizeOf<KeyboardInputEvent>());
                 if (inserted != unicodeEvents.Length)
+                {
+                    ReleaseInsertedModifiers(unicodeEvents, inserted);
                     return new(false, "Ввод мог выполниться частично. Проверьте терминал перед повтором; Enter не отправлен.", submittedText);
+                }
                 enteredText = true;
-                if (offset + length < submittedText.Length)
+                offset += length;
+                if (offset < submittedText.Length)
                     await Task.Delay(InputChunkPause, token);
             }
 
@@ -152,18 +157,25 @@ internal static class ForegroundTerminalSender
     internal static string? PrepareText(string? text)
     {
         if (string.IsNullOrWhiteSpace(text) || text.Length > MaxTextLength) return null;
-        foreach (var character in text)
+        var remaining = text.AsSpan();
+        while (!remaining.IsEmpty)
         {
-            var category = char.GetUnicodeCategory(character);
-            if ((char.IsWhiteSpace(character) && character != ' ') || char.IsControl(character)
-                || char.IsSurrogate(character) || category is UnicodeCategory.Format
-                    or UnicodeCategory.PrivateUse or UnicodeCategory.OtherNotAssigned
-                || ShellMetacharacters.Contains(character))
-                return null;
+            if (Rune.DecodeFromUtf16(remaining, out var rune, out var consumed) != OperationStatus.Done)
+                return null; // Reject malformed UTF-16, not ordinary emoji or joiners.
+            if (Rune.IsControl(rune) && rune.Value is not ('\n' or '\r' or '\t')) return null;
+            remaining = remaining[consumed..];
         }
+        var message = text.Trim().Replace("\r\n", "\n").Replace('\r', '\n')
+            .Replace('\u2028', '\n').Replace('\u2029', '\n').Replace("\t", "    ");
+        return message.Length == 0 || message.Length > MaxTextLength ? null : Prefix + message;
+    }
 
-        var line = text.Trim(' ');
-        return line.Length == 0 ? null : Prefix + line;
+    internal static int TextChunkLength(string text, int offset)
+    {
+        var length = Math.Min(InputChunkChars, text.Length - offset);
+        if (offset + length < text.Length && char.IsHighSurrogate(text[offset + length - 1])
+            && char.IsLowSurrogate(text[offset + length])) length--;
+        return length;
     }
 
     private static bool IsCurrentTarget(CapturedSession selected, Func<bool>? remoteInputGuard) =>
@@ -185,13 +197,36 @@ internal static class ForegroundTerminalSender
 
     private static KeyboardInputEvent[] BuildTextEvents(ReadOnlySpan<char> text)
     {
-        var events = new KeyboardInputEvent[text.Length * 2];
+        var events = new List<KeyboardInputEvent>(text.Length * 2);
         for (var index = 0; index < text.Length; index++)
         {
-            events[index * 2] = Keyboard(scanCode: text[index], flags: KeyEventUnicode);
-            events[index * 2 + 1] = Keyboard(scanCode: text[index], flags: KeyEventUnicode | KeyEventKeyUp);
+            if (text[index] == '\n')
+            {
+                // Shift+Enter is the Codex composer newline action. A plain Enter
+                // appears only after the entire message and final target check.
+                events.Add(Keyboard(virtualKey: VirtualKeyShift));
+                events.Add(Keyboard(virtualKey: VirtualKeyReturn));
+                events.Add(Keyboard(virtualKey: VirtualKeyReturn, flags: KeyEventKeyUp));
+                events.Add(Keyboard(virtualKey: VirtualKeyShift, flags: KeyEventKeyUp));
+            }
+            else
+            {
+                events.Add(Keyboard(scanCode: text[index], flags: KeyEventUnicode));
+                events.Add(Keyboard(scanCode: text[index], flags: KeyEventUnicode | KeyEventKeyUp));
+            }
         }
-        return events;
+        return events.ToArray();
+    }
+
+    private static void ReleaseInsertedModifiers(KeyboardInputEvent[] events, uint inserted)
+    {
+        var shiftDown = false;
+        for (var index = 0; index < Math.Min(inserted, (uint)events.Length); index++)
+            if (events[index].Keyboard.VirtualKey == VirtualKeyShift)
+                shiftDown = (events[index].Keyboard.Flags & KeyEventKeyUp) == 0;
+        if (!shiftDown) return;
+        var release = new[] { Keyboard(virtualKey: VirtualKeyShift, flags: KeyEventKeyUp) };
+        _ = SendInput(1, release, Marshal.SizeOf<KeyboardInputEvent>());
     }
 
     private static KeyboardInputEvent Keyboard(ushort virtualKey = 0, ushort scanCode = 0, uint flags = 0) =>

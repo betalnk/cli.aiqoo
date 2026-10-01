@@ -18,6 +18,7 @@ public sealed partial class App : Application
     private Task _cleanupTask = Task.CompletedTask;
     private Task _quickCleanupTask = Task.CompletedTask;
     private int _backgroundVoiceSends;
+    private int _pairingApprovalPending;
     private CapturedSession? _pendingCapture;
     private QuickRequest? _pendingQuickRequest;
     private bool _openingAfterCleanup;
@@ -79,7 +80,7 @@ public sealed partial class App : Application
                         if (_exiting) return;
                         _pairingWindow?.SetStatus(message);
                         ShowError(message);
-                    }), RemoteInputIdle);
+                    }), RemoteInputIdle, approve: ApproveCliPairingAsync);
                 _deviceConnection.Start();
                 _quickGesture = _quickSettings.Load(out var settingsError);
                 _hotkey = new HotkeyListener(OnCapture, OnQuickPress, OnQuickRelease, ShowError,
@@ -101,11 +102,19 @@ public sealed partial class App : Application
                 && _overlay is not { IsVisible: true }
                 && _quickWindow is null
                 && Volatile.Read(ref _backgroundVoiceSends) == 0
+                && Volatile.Read(ref _pairingApprovalPending) == 0
                 && !_openingAfterCleanup && !_openingQuickAfterCleanup
                 && _cleanupTask.IsCompleted && _quickCleanupTask.IsCompleted)
                 .GetAwaiter().GetResult();
         }
         catch { return false; }
+    }
+
+    private async Task<bool> ApproveCliPairingAsync(VoicePairingApprovalRequest request, CancellationToken token)
+    {
+        Interlocked.Increment(ref _pairingApprovalPending);
+        try { return await VoicePairingApprovalWindow.AskAsync(request, token); }
+        finally { Interlocked.Decrement(ref _pairingApprovalPending); }
     }
 
     private void OnCapture(CapturedSession target)
@@ -243,17 +252,18 @@ public sealed partial class App : Application
 
     private void ShowOverlay(CapturedSession target)
     {
-        VoiceDraft? restoredDraft;
-        try { restoredDraft = _draftStore.Load(target.ThreadId) ?? _draftStore.LoadNewest(); }
+        // A hotkey always starts a new recording for the captured exact session.
+        // Keep an earlier uncertain message on disk without restoring its text,
+        // recipient or confirmation state into this activation.
+        try { _draftStore.PreserveForFreshCapture(target.ThreadId); }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
-            ShowError($"Не удалось открыть сохранённый черновик: {exception.Message}");
+            ShowError($"Не удалось сохранить предыдущий черновик: {exception.Message}");
             return;
         }
         var overlay = new VoiceOverlay(target, _playback,
             openHotkeySettings: OpenQuickHotkeySettings, openCliAccount: OpenCliAccount,
-            draftStore: _draftStore,
-            restoredDraft: restoredDraft, backgroundSend: SendAfterOverlayClosesAsync);
+            draftStore: _draftStore, backgroundSend: SendAfterOverlayClosesAsync);
         _overlay = overlay;
         overlay.Closed += (_, _) =>
         {
@@ -265,19 +275,26 @@ public sealed partial class App : Application
         overlay.Activate();
     }
 
-    private void OpenCliAccount()
+    private async void OpenCliAccount()
     {
+        if (_exiting || _openingPairing) return;
+        _openingPairing = true;
         try
         {
-            Process.Start(new ProcessStartInfo("https://cli.aiqoo.ru/account.html")
+            ShowError("Открываю личный кабинет CLI…");
+            var offer = await StartCliPairingAsync();
+            if (_exiting) return;
+            var fragment = new Uri(offer.QrUrl).Fragment;
+            Process.Start(new ProcessStartInfo("https://cli.aiqoo.ru/account.html" + fragment)
             {
                 UseShellExecute = true
             });
         }
         catch
         {
-            ShowError("Не удалось открыть аккаунт CLI в браузере.");
+            ShowError("Не удалось открыть привязку CLI. Проверьте соединение и повторите.");
         }
+        finally { _openingPairing = false; }
     }
 
     private void OpenCliAccount_OnClick(object? sender, EventArgs args) => OpenCliAccount();

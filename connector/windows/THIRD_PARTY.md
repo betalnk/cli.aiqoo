@@ -12,11 +12,11 @@ This document records direct dependencies for the Windows source build. `dotnet 
 | [Vosk](https://alphacephei.com/vosk/) | 0.3.38 | Apache 2.0 (NuGet metadata) |
 | [Whisper.net](https://github.com/sandrohanea/whisper.net), Whisper.net.Runtime, Whisper.net.Runtime.Cuda | 1.8.1 | MIT (`LICENSE` in the NuGet package and runtime package metadata) |
 
-Model files are downloaded by each user, separately from this source package:
+Model files are downloaded separately for a source build. The Windows installer build bundles the local copies supplied to `Build-Installer.ps1`:
 
 | Model | Source and upstream license |
 | --- | --- |
 | `vosk-model-small-ru-0.22` | [Vosk model catalog](https://alphacephei.com/vosk/models), Apache 2.0 |
-| `ggml-large-v3-turbo-q5_0.bin` | [ggerganov/whisper.cpp model page](https://huggingface.co/ggerganov/whisper.cpp/blob/main/ggml-large-v3-turbo-q5_0.bin), repository model card marked MIT |
+| `ggml-largev3turbo-q5_0.bin` (renamed from upstream) | [ggerganov/whisper.cpp model page](https://huggingface.co/ggerganov/whisper.cpp/blob/main/ggml-large-v3-turbo-q5_0.bin), repository model card marked MIT |
 
-If binaries are distributed later, include the exact notices and license files for the packaged dependency versions and any bundled weights. This file does not choose a license for the Codex Voice source.
+The Windows installer includes the applicable license and third-party notice texts in `notices/licenses/`; their versions and sources are recorded in [the installer notice manifest](installer/notices/README.md). This file does not choose a license for the Codex Voice source.

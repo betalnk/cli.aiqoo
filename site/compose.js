@@ -1,5 +1,6 @@
 import { microphoneAvailable, startMicrophoneCapture, MAX_RECORDING_SECONDS } from './audio-capture.js';
 import { runCommand } from './command-client.js';
+import { validMessageText } from './message-text.js';
 
 const form = document.getElementById('compose');
 const recipientNode = document.getElementById('compose-recipient');
@@ -13,19 +14,7 @@ const discardButton = document.getElementById('discard-voice');
 const sendButton = document.getElementById('send-message');
 const sendStatus = document.getElementById('send-status');
 const encoder = new TextEncoder();
-const shellCharacters = new Set(['&', '|', '<', '>', '^', '%', '!', '$', '`', '"', "'", ';', '(', ')', '{', '}', '[', ']', '#', '@', '*', '\\']);
 const drafts = new Map();
-
-function safeSingleLine(text) {
-  if (!text || encoder.encode(text).length > 8192) return false;
-  for (let index = 0; index < text.length; index++) {
-    const character = text[index];
-    if (/\p{White_Space}/u.test(character) && character !== ' ') return false;
-    if (/[\p{Cc}\p{Cf}\p{Co}\p{Cn}\p{Cs}]/u.test(character)
-        || shellCharacters.has(character)) return false;
-  }
-  return true;
-}
 
 let recipient = null;
 let recording = null;
@@ -56,7 +45,7 @@ function render() {
   }
   const key = keyOf(recipient);
   const draft = draftFor(key);
-  recipientNode.textContent = `${recipient.pair.deviceName} · ${recipient.title || 'Сессия'} · ${recipient.threadId.slice(0, 8)}`;
+  recipientNode.textContent = `${recipient.pair.deviceName} · ${recipient.title || 'Сессия'} · ${recipient.threadId.slice(-8)}`;
   if (draftInput.value !== draft.text) draftInput.value = draft.text;
   const busyHere = activeCommand?.key === key;
   const busy = Boolean(activeCommand);
@@ -257,6 +246,15 @@ draftInput.addEventListener('input', () => {
   draft.text = draftInput.value;
   draft.status = null;
   render();
+  if (draftInput.style) {
+    draftInput.style.height = 'auto';
+    draftInput.style.height = `${Math.min(180, Math.max(60, draftInput.scrollHeight || 60))}px`;
+  }
+});
+draftInput.addEventListener('keydown', event => {
+  if (event.key !== 'Enter' || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return;
+  event.preventDefault();
+  if (!sendButton.disabled) form.requestSubmit?.();
 });
 recordButton.addEventListener('click', () => recording ? stopRecording() : startRecording());
 discardButton.addEventListener('click', () => {
@@ -275,8 +273,8 @@ form.addEventListener('submit', event => {
   if (!recipient || sendButton.disabled) return;
   const draft = draftFor(keyOf(recipient));
   const text = draft.text.trim();
-  if (!safeSingleLine(text)) {
-    setStatus(draft, 'В этом режиме можно отправить только одну строку без командных символов и эмодзи. Черновик сохранён.', true);
+  if (!validMessageText(text)) {
+    setStatus(draft, 'Не удалось отправить текст: проверьте длину и удалите управляющие символы. Черновик сохранён.', true);
     return;
   }
   execute('send_text', encoder.encode(text));

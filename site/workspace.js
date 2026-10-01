@@ -9,6 +9,7 @@ const conversationTitle = document.getElementById('conversation-title');
 const conversationDevice = document.getElementById('conversation-device');
 const conversationStatus = document.getElementById('conversation-status');
 const messageList = document.getElementById('message-list');
+const conversationScroll = document.getElementById('conversation-scroll');
 const idPattern = /^[0-9a-f]{32}$/;
 const threadPattern = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/;
 const encoder = new TextEncoder();
@@ -309,8 +310,8 @@ function renderMessages() {
   setComposeRecipient(selected && historyWatch?.state === 'online' ? selected : null);
   if (!selected) { stopSpeech(); conversation.hidden = true; return; }
   conversation.hidden = false;
-  conversationTitle.textContent = selected.title || `Сессия ${selected.threadId.slice(0, 8)}`;
-  conversationDevice.textContent = `${selected.pair.deviceName} · ${selected.threadId.slice(0, 8)}`;
+  conversationTitle.textContent = selected.title || `Сессия ${selected.threadId.slice(-8)}`;
+  conversationDevice.textContent = `${selected.pair.deviceName} · ${selected.threadId.slice(-8)}`;
   const watch = historyWatch;
   if (!watch || watch.state !== 'online') {
     stopSpeech();
@@ -337,10 +338,13 @@ function renderMessages() {
   const signature = JSON.stringify(watch.items);
   if (signature === renderedMessages) { messageList.hidden = false; return; }
   stopSpeech();
+  const followLatest = !renderedMessages || (conversationScroll
+    && conversationScroll.scrollHeight - conversationScroll.clientHeight - conversationScroll.scrollTop < 64);
   renderedMessages = signature;
   messageList.replaceChildren();
   for (const item of watch.items) {
     const row = document.createElement('li');
+    row.className = `message-list__row message-list__row--${item.role}`;
     const head = document.createElement('div');
     head.className = 'message-list__head';
     const author = document.createElement('strong');
@@ -366,6 +370,11 @@ function renderMessages() {
     messageList.append(row);
   }
   messageList.hidden = false;
+  if (followLatest && conversationScroll) {
+    const scroll = () => { conversationScroll.scrollTop = conversationScroll.scrollHeight; };
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(scroll);
+    else scroll();
+  }
 }
 
 function selectSession(item) {
@@ -438,9 +447,9 @@ function renderWorkspace() {
       button.dataset.sessionKey = sessionKey(item);
       button.setAttribute('aria-pressed', String(Boolean(selected && sessionKey(selected) === sessionKey(item))));
       const title = document.createElement('strong');
-      title.textContent = item.title || `Сессия ${item.threadId.slice(0, 8)}`;
+      title.textContent = item.title || `Сессия ${item.threadId.slice(-8)}`;
       const meta = document.createElement('span');
-      meta.textContent = `${item.pair.deviceName} · ${item.threadId.slice(0, 8)}`;
+      meta.textContent = `${item.pair.deviceName} · ${item.threadId.slice(-8)}`;
       button.append(title, meta);
       button.addEventListener('click', () => selectSession(item));
       sessionList.append(button);

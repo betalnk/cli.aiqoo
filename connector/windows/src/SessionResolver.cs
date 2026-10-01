@@ -215,10 +215,12 @@ internal static partial class SessionResolver
 
     /// <summary>Find the local rollout for an exact CLI session ID without reading its contents.</summary>
     internal static bool TryGetRolloutPath(string threadId, out string path)
+        => TryGetRolloutPath(DatabasePath(), threadId, out path);
+
+    internal static bool TryGetRolloutPath(string file, string threadId, out string path)
     {
         path = "";
         if (!TryCanonicalThreadId(threadId, out var canonical)) return false;
-        var file = DatabasePath();
         if (!File.Exists(file)) return false;
 
         IntPtr database = IntPtr.Zero;
@@ -228,7 +230,8 @@ internal static partial class SessionResolver
             var rc = sqlite3_open_v2(file, out database, SqliteReadOnly, IntPtr.Zero);
             if (rc != 0 || database == IntPtr.Zero) return false;
             // The canonical value contains only UUID hex digits and hyphens.
-            var sql = $"SELECT rollout_path FROM threads WHERE id = '{canonical}' AND source = 'cli'";
+            // The selected UUID remains the identity after a thread is resumed in CLI.
+            var sql = $"SELECT rollout_path FROM threads WHERE id = '{canonical}' AND archived = 0";
             rc = sqlite3_prepare_v2(database, sql, -1, out statement, IntPtr.Zero);
             if (rc != 0 || statement == IntPtr.Zero) return false;
             if (sqlite3_step(statement) != SqliteRow) return false;
@@ -369,14 +372,16 @@ internal static partial class SessionResolver
         return buffer.ToString();
     }
 
-    private static IReadOnlyList<(string Id, string Name, string Cwd)> ReadThreads(string file)
+    internal static IReadOnlyList<(string Id, string Name, string Cwd)> ReadThreads(string file)
     {
         var result = new List<(string, string, string)>();
         var rc = sqlite3_open_v2(file, out var db, SqliteReadOnly, IntPtr.Zero);
         if (rc != 0 || db == IntPtr.Zero) throw new InvalidOperationException($"SQLite open: {rc}");
         try
         {
-            const string sql = "SELECT id, name, cwd FROM threads WHERE archived = 0 AND source = 'cli' AND name IS NOT NULL";
+            // Source records where a thread was created, not the host of a resumed TUI.
+            // Foreground routing still requires a visible terminal and a unique name/project.
+            const string sql = "SELECT id, name, cwd FROM threads WHERE archived = 0 AND name IS NOT NULL";
             rc = sqlite3_prepare_v2(db, sql, -1, out var statement, IntPtr.Zero);
             if (rc != 0) throw new InvalidOperationException($"SQLite query: {rc}");
             try

@@ -44,6 +44,18 @@ internal static class CodexHistoryReaderSelfTests
         Check(first.UsedFallback && first.Turns.Single().TurnId == "newer");
         Check(first.NextCursor == "fallback:v1:1");
         Check(second.Turns.Single().TurnId == "older" && second.NextCursor is null);
+
+        var threadId = Guid.NewGuid().ToString("D");
+        foreach (var source in new[] { "cli", "vscode", "exec" })
+        {
+            using var metadata = JsonDocument.Parse(JsonSerializer.Serialize(new { id = threadId, source }));
+            CodexHistoryReader.ValidateThreadIdentity(metadata.RootElement, threadId);
+            CodexHistoryReader.ValidateThreadIdentity(metadata.RootElement, threadId.ToUpperInvariant());
+            var rejected = false;
+            try { CodexHistoryReader.ValidateThreadIdentity(metadata.RootElement, Guid.NewGuid().ToString("D")); }
+            catch (InvalidOperationException) { rejected = true; }
+            Check(rejected);
+        }
     }
 
     private static void Check(bool condition)

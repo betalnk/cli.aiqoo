@@ -5,8 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/chat.css">
   <script type="module" src="/account.js"></script>
   <title>Личный кабинет — CLI</title>
 </head>
@@ -16,27 +18,36 @@
   <main class="account-page page-width" id="main">
     <div class="account-heading"><div><h1>Личный кабинет CLI</h1><p>Аккаунт и устройства этого проекта отделены от AIQOO.</p></div><button class="account-logout" id="logout" type="button" disabled>Выйти</button></div>
     <p id="account-status" class="form-message" role="status">Проверяем вход…</p>
+    <section class="account-section" aria-labelledby="bind-title" id="account-pairing" hidden>
+      <div class="account-section__heading"><h2 id="bind-title">Привязать этот ПК</h2><span>Запрос откроется в приложении на компьютере</span></div>
+      <div>
+        <p id="bind-status" class="account-inline-status" role="status" aria-live="polite">Проверяем запрос…</p>
+        <button id="bind-pc" class="button button--solid pair-panel__button" type="button" disabled hidden>Привязать</button>
+      </div>
+    </section>
     <section class="account-section account-section--workspace" aria-labelledby="sessions-title" id="workspace" hidden>
-      <div class="account-section__heading"><h2 id="sessions-title">Сессии Codex</h2><span>Сейчас доступны на ваших компьютерах</span></div>
+      <div class="account-section__heading"><h2 id="sessions-title">Чаты Codex</h2><span>Открытые сессии на ваших компьютерах</span></div>
       <div class="workspace">
         <div class="workspace__bar"><p id="workspace-status" class="account-inline-status" role="status">Проверяем подключение…</p><span id="workspace-live" class="workspace__live" hidden>В сети</span></div>
         <div id="workspace-content" class="workspace__content" hidden>
           <div class="workspace__sessions"><h3>Выберите сессию</h3><div id="session-list" class="session-list" role="group" aria-label="Доступные сессии Codex"></div></div>
-          <div class="workspace__history" id="conversation" hidden><div class="workspace__history-head"><div><h3 id="conversation-title">Диалог</h3><span id="conversation-device"></span></div><span class="workspace__history-count">Последние 3 сообщения</span></div><p id="conversation-status" class="account-inline-status" role="status">Загружаем историю…</p><ol id="message-list" class="message-list" hidden></ol>
+          <div class="workspace__history" id="conversation" hidden><div class="workspace__history-head"><div><h3 id="conversation-title">Диалог</h3><span id="conversation-device"></span></div><span class="workspace__history-count">Последние 3 сообщения</span></div><div class="conversation-scroll" id="conversation-scroll" tabindex="0" aria-label="Переписка"><p id="conversation-status" class="account-inline-status" role="status">Загружаем историю…</p><ol id="message-list" class="message-list" aria-live="polite" hidden></ol></div>
             <form class="compose" id="compose" hidden>
               <label class="compose__label" for="message-draft">Сообщение</label>
               <span id="compose-recipient" class="compose__recipient"></span>
-              <textarea id="message-draft" rows="4" maxlength="16000" placeholder="Напишите сообщение…" spellcheck="true"></textarea>
+              <textarea id="message-draft" rows="2" maxlength="16000" placeholder="Напишите сообщение…" aria-describedby="compose-recipient" spellcheck="true"></textarea>
               <div class="compose__voice"><button id="record-voice" class="compose__secondary" type="button">Записать голос</button><span id="record-status" role="status" hidden></span></div>
               <div id="voice-preview-wrap" class="compose__preview" hidden><audio id="voice-preview" controls preload="metadata" aria-label="Прослушать запись"></audio><div><button id="transcribe-voice" class="compose__secondary" type="button">Распознать на ПК</button><button id="discard-voice" class="compose__quiet" type="button">Удалить запись</button></div></div>
-              <div class="compose__foot"><p id="send-status" role="status" hidden></p><button id="send-message" class="button button--solid" type="submit" disabled>Отправить</button></div>
+              <div class="compose__foot"><div><span class="compose__keyboard-hint">Enter — отправить · Shift+Enter — новая строка</span><p id="send-status" role="status" hidden></p></div><button id="send-message" class="button button--solid" type="submit" disabled>Отправить</button></div>
             </form>
           </div>
         </div>
       </div>
     </section>
+    <details class="account-settings"><summary>Профиль и компьютеры</summary>
     <section class="account-section" aria-labelledby="identity-title" id="identity" hidden><div class="account-section__heading"><h2 id="identity-title">Ваш профиль</h2></div><dl class="account-details"><div><dt>GitHub</dt><dd id="account-github"></dd></div><div><dt>Подтверждённая почта</dt><dd id="account-email"></dd></div></dl></section>
     <section class="account-section" aria-labelledby="devices-title" id="devices" hidden><div class="account-section__heading"><h2 id="devices-title">Компьютеры</h2><span>Доступ можно отозвать в любой момент</span></div><div><p id="devices-status" class="account-inline-status" role="status">Загружаем устройства…</p><div id="device-list" class="device-list" hidden></div></div></section>
+    </details>
   </main>
   <footer class="site-footer page-width"><span>CLI · отдельный проект</span><a href="/docs.html">Документация</a><a href="https://github.com/betalnk/cli.aiqoo/blob/main/LICENSE" rel="noopener noreferrer">Лицензия</a><span>cli.aiqoo.ru</span></footer>
 </body>

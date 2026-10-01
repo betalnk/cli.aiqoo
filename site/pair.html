@@ -8,7 +8,7 @@
   <meta name="referrer" content="no-referrer">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
-  <script src="/pair.js" defer></script>
+  <script type="module" src="/pair.js"></script>
   <title>Подключить компьютер — CLI</title>
 </head>
 <body class="account-body">
@@ -23,8 +23,8 @@
       <p id="pair-status" class="pair-panel__status" role="status">Проверяем ссылку и вход в аккаунт…</p>
       <div id="pair-confirmation" hidden>
         <dl class="pair-facts"><div><dt>Отпечаток ключа ПК</dt><dd id="pair-fingerprint"></dd></div><div><dt>Срок кода</dt><dd>5 минут с момента создания на ПК</dd></div></dl>
-        <p class="pair-panel__note">Сверьте, что QR-код открыт на вашем компьютере. Подключение станет активным только после подтверждения приложением на ПК.</p>
-        <button id="pair-submit" class="button button--solid pair-panel__button" type="button">Подтвердить этот ПК <span aria-hidden="true">→</span></button>
+        <p class="pair-panel__note">Сверьте, что QR-код открыт на вашем компьютере. Нажмите «Привязать», затем подтвердите запрос кнопкой «ОК» в приложении на ПК.</p>
+        <button id="pair-submit" class="button button--solid pair-panel__button" type="button">Привязать <span aria-hidden="true">→</span></button>
       </div>
       <div id="pair-waiting" hidden><p class="pair-panel__note">Ожидаем подтверждения на компьютере. Оставьте приложение запущенным.</p><a class="text-link" href="/account.html">Открыть аккаунт <span aria-hidden="true">→</span></a></div>
     </section>

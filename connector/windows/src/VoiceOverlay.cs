@@ -236,7 +236,7 @@ internal sealed class VoiceOverlay : Window
         _confirmRecipientButton.FontSize = 11;
         _confirmRecipientButton.Margin = new Thickness(0, 4, 0, 4);
         _confirmRecipientButton.HorizontalAlignment = HorizontalAlignment.Center;
-        _confirmRecipientButton.IsVisible = !_preview;
+        _confirmRecipientButton.IsVisible = !_preview && restoredDraft is not null;
         AutomationProperties.SetName(_confirmRecipientButton, "Подтвердить получателя по точному идентификатору Codex");
         _confirmRecipientButton.Click += (_, _) => ConfirmRecipient();
         _codexStatus = new TextBlock
@@ -396,7 +396,7 @@ internal sealed class VoiceOverlay : Window
         accountButton.Padding = new Thickness(9, 3);
         accountButton.IsVisible = !_preview && openCliAccount is not null;
         AutomationProperties.SetName(accountButton, "Открыть отдельный аккаунт CLI в браузере");
-        accountButton.Click += (_, _) => openCliAccount?.Invoke();
+        accountButton.Click += (_, _) => LeaveForAccount(openCliAccount);
         var hotkeySettings = ActionButton("Клавиши", primary: false);
         hotkeySettings.FontSize = 10;
         hotkeySettings.Height = 28;
@@ -1252,6 +1252,30 @@ internal sealed class VoiceOverlay : Window
         Close();
         RestoreTargetFocus();
         return Task.CompletedTask;
+    }
+
+    private void LeaveForAccount(Action? openAccount)
+    {
+        if (_closing || _phase is Phase.PreparingSend or Phase.Sending || openAccount is null) return;
+        var text = _phase == Phase.Editing ? _editor.Text ?? ""
+            : Volatile.Read(ref _latestTranscriptPreview);
+        if (!string.IsNullOrWhiteSpace(text) && _draftStore is not null)
+        {
+            try { _draftStore.Save(VoiceDraft.Capture(_draftOriginThreadId, SelectedSession,
+                text, "Сохранён для проверки")); }
+            catch (Exception exception) when (exception is not OutOfMemoryException)
+            {
+                _status.Text = $"Не удалось сохранить черновик: {exception.Message}";
+                return;
+            }
+        }
+        var previous = _phase;
+        _closing = true;
+        _sendAfterFinalization = false;
+        ChangePhase(Phase.Closing);
+        if (previous is Phase.Loading or Phase.Listening or Phase.Finalizing) BeginSpeechCleanup();
+        Close(); // The full-screen topmost voice overlay must not cover the browser.
+        openAccount();
     }
 
     private void BeginSpeechCleanup()

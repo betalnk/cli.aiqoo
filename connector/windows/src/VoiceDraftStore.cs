@@ -77,6 +77,28 @@ internal sealed class VoiceDraftStore
         return newest is null ? null : Load(Path.GetFileNameWithoutExtension(newest));
     }
 
+    /// <summary>Recover text from this session without redirecting a fresh capture to another tab.</summary>
+    internal VoiceDraft? LoadForActivation(string originalThreadId)
+    {
+        var draft = Load(originalThreadId);
+        // Closing an unused overlay can leave an empty draft. It must not turn the
+        // next activation into recovery mode and suppress microphone startup.
+        return draft is not null && !string.IsNullOrWhiteSpace(draft.Text) ? draft : null;
+    }
+
+    /// <summary>Preserve an earlier message; a hotkey must never restore it implicitly.</summary>
+    internal string? PreserveForFreshCapture(string originalThreadId)
+    {
+        var path = PathFor(originalThreadId);
+        if (!File.Exists(path)) return null;
+        var preservedRoot = Path.Combine(_root, "preserved");
+        Directory.CreateDirectory(preservedRoot);
+        var preserved = Path.Combine(preservedRoot,
+            $"{Path.GetFileNameWithoutExtension(path)}.{Guid.NewGuid():N}.json");
+        File.Move(path, preserved); // Same-volume rename; never overwrite an older copy.
+        return preserved;
+    }
+
     internal void Save(VoiceDraft draft)
     {
         Validate(draft);

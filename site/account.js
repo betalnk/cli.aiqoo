@@ -1,9 +1,51 @@
 import { removeWorkspaceDevice, startWorkspace } from './workspace.js';
+import { captureFragment } from './pairing.js';
+import { mountPairing } from './pairing-ui.js';
+
+let fragmentError = null;
+try { captureFragment(); }
+catch (error) { fragmentError = error; }
 
 const statusNode = document.getElementById('account-status');
 const devicesStatus = document.getElementById('devices-status');
 const deviceList = document.getElementById('device-list');
 const logoutButton = document.getElementById('logout');
+
+async function setupBinding(ownerId, devices) {
+  const section = document.getElementById('account-pairing');
+  const status = document.getElementById('bind-status');
+  const button = document.getElementById('bind-pc');
+  const controller = new AbortController();
+  globalThis.addEventListener?.('pagehide', () => controller.abort(), { once: true });
+  const setStatus = (message, error = false) => {
+    section.hidden = false;
+    status.textContent = message;
+    status.classList.toggle('account-inline-status--error', error);
+  };
+  try {
+    if (fragmentError) throw fragmentError;
+    const visible = await mountPairing({ ownerId, button, setStatus, signal: controller.signal,
+      clientName: 'Браузер ЛК',
+      onReady() {
+        if (devices?.length === 0) document.getElementById('workspace-status').textContent =
+          'Сначала привяжите этот ПК и подтвердите запрос в приложении.';
+      },
+      onWaiting() {
+        if (devices?.length === 0) document.getElementById('workspace-status').textContent =
+          'Ожидаем «ОК» на ПК. После подтверждения здесь появятся сессии.';
+      },
+      onActive: (_record, { alreadyActive }) => {
+        if (alreadyActive) return;
+        // Workspace starts once per page; reload only after the active key is saved.
+        location.reload();
+      }
+    });
+    section.hidden = !visible;
+  } catch (error) {
+    button.hidden = true;
+    setStatus(error.message || 'Не удалось проверить запрос. Откройте ЛК из приложения на ПК заново.', true);
+  }
+}
 
 function showDevicesStatus(message, error = false) {
   devicesStatus.textContent = message;
@@ -87,7 +129,8 @@ async function loadAccount() {
     statusNode.hidden = true;
     logoutButton.disabled = false;
     const devices = await loadDevices();
-    startWorkspace(data.user.id, devices);
+    await startWorkspace(data.user.id, devices);
+    await setupBinding(data.user.id, devices);
   } catch {
     statusNode.textContent = 'Не удалось загрузить аккаунт. Проверьте соединение и обновите страницу.';
     statusNode.classList.add('form-message--error');

@@ -33,13 +33,17 @@ internal static class VoicePairingRecoverySelfTests
             // verify the browser proof after a process restart.
             using (var afterRestart = new VoicePairingManager(store))
             {
-                afterRestart.Accept(claim);
+                if (afterRestart.VerifyClaim(claim).AlreadyApproved || store.LoadClientKey(clientId) is not null)
+                    throw new InvalidOperationException("A pending request granted access without approval.");
+                afterRestart.AcceptApproved(claim);
                 if (afterRestart.PendingDecisions().Single().EventId != eventId)
                     throw new InvalidOperationException("Accepted CLI pair was not durable.");
             }
             using (var afterLostAck = new VoicePairingManager(store))
             {
-                afterLostAck.Accept(claim);
+                if (!afterLostAck.VerifyClaim(claim).AlreadyApproved)
+                    throw new InvalidOperationException("Local approval was not preserved across a lost ACK.");
+                afterLostAck.AcceptApproved(claim);
                 if (afterLostAck.PendingDecisions().Single().ClientId != clientId)
                     throw new InvalidOperationException("CLI accept decision was not replayable.");
                 afterLostAck.ConfirmDecision(eventId, pairId, clientId);
@@ -49,6 +53,16 @@ internal static class VoicePairingRecoverySelfTests
             }
             var key = store.LoadClientKey(clientId)
                 ?? throw new InvalidOperationException("Confirmed CLI pair lost its local key.");
+            CryptographicOperations.ZeroMemory(key);
+            // A lost ACK across the original QR deadline must not destroy a key that
+            // may already belong to an active, explicitly approved server pairing.
+            var lateDecision = new VoicePendingPairDecision(Guid.NewGuid().ToString("N"), pairId,
+                clientId, publicKey, proof, DateTimeOffset.UtcNow.AddSeconds(1).ToUnixTimeSeconds(), true);
+            store.SaveDecision(lateDecision);
+            if (store.LoadDecision(lateDecision.EventId, DateTimeOffset.UtcNow.AddMinutes(6)) is not null)
+                throw new InvalidOperationException("An expired decision remained replayable.");
+            key = store.LoadClientKey(clientId)
+                ?? throw new InvalidOperationException("Expired decision removed an approved client key.");
             CryptographicOperations.ZeroMemory(key);
             var registration = new VoiceDeviceRegistration(
                 "55556666777788889999aaaabbbbcccc", "dvc_" + new string('A', 43));
