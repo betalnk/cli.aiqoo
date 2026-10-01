@@ -2,7 +2,7 @@
 
 CLI is an independent project for working with local coding-agent sessions. The current Windows prototype transcribes speech locally, lets you edit the text, and targets a chosen Codex CLI session. The local phone interface code uses a separate account and an encrypted connection to your own PC; it is not deployed yet.
 
-The public website draft is in [`site/`](site/). It is not deployed at `cli.aiqoo.ru` yet. A buildable Windows source package and [installer builder](connector/windows/installer/README.md) are in [`connector/windows/`](connector/windows/); there is no public installer or released binary. See [current status](docs/status.md) before using the project.
+The public website draft is in [`site/`](site/). It is not deployed at `cli.aiqoo.ru` yet. The [Windows preview installer](https://github.com/betalnk/cli.aiqoo/releases/tag/v0.1.0) is available with bundled speech models; a buildable source package and [installer builder](connector/windows/installer/README.md) are in [`connector/windows/`](connector/windows/). See [current status](docs/status.md) before using the project.
 
 ## Website preview
 
@@ -24,4 +24,4 @@ Speech recognition runs on the user's PC. A separate private service implements 
 
 The original AIQOO platform and its account system are outside this project. Large speech models, private keys, local session databases, build outputs and the platform source are not part of this repository.
 
-The source is public for inspection under the [view-only terms](LICENSE). All rights are reserved; public access does not grant permission to copy, modify, or redistribute this project's code. Third-party components retain their own licenses. No binary is distributed from this repository yet.
+The source is public for inspection under the [view-only terms](LICENSE). All rights are reserved; public access does not grant permission to copy, modify, or redistribute this project's code. Third-party components retain their own licenses. The Windows preview binary is distributed through [GitHub Releases](https://github.com/betalnk/cli.aiqoo/releases/tag/v0.1.0).

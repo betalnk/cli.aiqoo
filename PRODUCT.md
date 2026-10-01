@@ -2,7 +2,7 @@
 
 CLI is a separate developer product proposed for `cli.aiqoo.ru`. It shares only a parent domain with AIQOO. Its accounts, user database, API and device connections are independent of AIQOO Core and platform accounts.
 
-The existing Windows Voice Connector works with visible Codex CLI tabs in CMD and PowerShell. It captures speech and runs Vosk/Whisper locally, shows editable text, and attempts delivery to the selected exact session with the `[via Voice Connector]` marker. The owner confirmed both short and long local messages reached the intended session after Enter closed the overlay. A buildable desktop source package is in `connector/windows`; no installer or binary has been released.
+The existing Windows Voice Connector works with visible Codex CLI tabs in CMD and PowerShell. It captures speech and runs Vosk/Whisper locally, shows editable text, and attempts delivery to the selected exact session with the `[via Voice Connector]` marker. The owner confirmed both short and long local messages reached the intended session after Enter closed the overlay. A buildable desktop source package is in `connector/windows`; the [v0.1.0 Windows preview installer](https://github.com/betalnk/cli.aiqoo/releases/tag/v0.1.0) is published.
 
 The public site uses a restrained developer-documentation style. It explains the current Windows prototype honestly, links to the GitHub project, and provides an independent CLI account. A separate private backend implements GitHub sign-in, a verified email stored in CLI's own database, revocable web sessions, and pending device pairing. Its HTTPS route and API were activated on NL on 2026-09-30. Completed real user login and an authenticated desktop/browser connection still need live verification. No paid tier is planned.
 
